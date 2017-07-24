@@ -1,11 +1,13 @@
 name 'nginx-source'
-maintainer 'The Authors'
-maintainer_email 'you@example.com'
+maintainer 'Shawn Huckabay '
+maintainer_email 'shawn.huckabay@gmail.com'
 license 'All Rights Reserved'
-description 'Installs/Configures nginx-source'
-long_description 'Installs/Configures nginx-source'
+description 'Installs Nginx from Source'
+long_description 'Installs Nginx from Source'
 version '0.1.0'
 chef_version '>= 12.1' if respond_to?(:chef_version)
+supports 'ubuntu', '16.04'
+depends 'apt'
 
 # The `issues_url` points to the location where issues for this cookbook are
 # tracked.  A `View Issues` link will be displayed on this cookbook's page when
