@@ -3,47 +3,22 @@
 # Recipe:: default
 #
 
-::Chef::Recipe.send(:include, Nginx::Helper)
+::Chef::Recipe.send(:include, Nginx::RecipeHelper)
+::Chef::Resource.send(:include, Nginx::ResourceHelper)
 
-version = {
-  pcre: node['pcre']['version'],
-  zlib: node['zlib']['version'],
-  openssl: node['openssl']['version']
-}
+apt_update
 
-src_dir = {
-  pcre: '/src/pcre',
-  zlib: '/src/zlib',
-  openssl: '/src/openssl',
-  nginx: '/src/nginx'
-}
+bulk_install(node['nginx']['build_packages']) unless nginx_installed?
 
-apt_update 'apt' do
-  frequency 86_400
-  action :periodic
-end
+%w(pcre zlib openssl).each do |pkg|
+  source_package pkg do
+    source_url node[pkg]['source_url']
+    source_dir node[pkg]['source_dir']
+    config_opts './config' if pkg == 'openssl'
 
-bulk_install(node['nginx']['build_packages'])
-
-source_package 'pcre' do
-  source_url 'ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/'\
-  "pcre-#{version[:pcre]}.tar.gz"
-
-  source_dir src_dir[:pcre]
-  verify_file node['nginx']['binary']
-end
-
-source_package 'zlib' do
-  source_url "http://zlib.net/zlib-#{version[:zlib]}.tar.gz"
-  source_dir src_dir[:zlib]
-  verify_file node['nginx']['binary']
-end
-
-source_package 'openssl' do
-  source_url "http://www.openssl.org/source/openssl-#{version[:openssl]}.tar.gz"
-  source_dir src_dir[:openssl]
-  config_opts './config'
-  verify_file node['nginx']['binary']
+    only_if node[pkg]['enabled'].to_s
+    not_if nginx_installed?
+  end
 end
 
 node['nginx']['dirs'].each do |nginx_dir|
@@ -53,20 +28,19 @@ node['nginx']['dirs'].each do |nginx_dir|
 end
 
 source_package 'nginx' do
-  source_url 'https://github.com/nginx/nginx'
-  source_dir src_dir[:nginx]
-  verify_file node['nginx']['binary']
-  git_source true
-  git_branch node['nginx']['git_branch']
+  source_url node['nginx']['source_url']
+  source_dir node['nginx']['source_dir']
 
-  config_opts "./auto/configure --with-pcre=#{src_dir[:pcre]} "\
-  "--with-zlib=#{src_dir[:zlib]} --with-openssl=#{src_dir[:openssl]} "\
-  "--with-http_ssl_module #{node['nginx']['config_paths']}"
+  git_source node['nginx']['git_source']
+  git_branch node['nginx']['version']
 
-  notifies :cleanup, 'source_package[pcre]'
-  notifies :cleanup, 'source_package[zlib]'
-  notifies :cleanup, 'source_package[openssl]'
-  notifies :cleanup, 'source_package[nginx]'
+  config_opts nginx_generate_config
+
+  not_if nginx_installed?
+
+  %w(pcre zlib openssl nginx).each do |pkg|
+    notifies :cleanup, "source_package[#{pkg}]"
+  end
 end
 
 # Add Nginx service file for systemd

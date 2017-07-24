@@ -3,11 +3,11 @@ property :target_file, String, name_property: true
 property :source_file, String, default: ''
 
 action :add do
-  template "/lib/systemd/system/#{target_file}.service" do
-    if source_file == ''
-      source "#{target_file}.service.erb"
+  template "/lib/systemd/system/#{new_resource.target_file}.service" do
+    if new_resource.source_file == ''
+      source "#{new_resource.target_file}.service.erb"
     else
-      source "#{source_file}.service.erb"
+      source "#{new_resource.source_file}.service.erb"
     end
 
     notifies :run, 'execute[reload_systemd]', :immediately
@@ -20,11 +20,11 @@ action :add do
 end
 
 action :delete do
-  service target_file do
+  service new_resource.target_file do
     action [:disable, :stop]
   end
 
-  file "/lib/systemd/system/#{target_file}.service" do
+  file "/lib/systemd/system/#{new_resource.target_file}.service" do
     action :delete
     notifies :run, 'execute[reload_systemd]', :immediately
   end
