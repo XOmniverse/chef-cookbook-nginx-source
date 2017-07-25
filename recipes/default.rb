@@ -3,27 +3,26 @@
 # Recipe:: default
 #
 
-::Chef::Recipe.send(:include, Nginx::RecipeHelper)
-::Chef::Resource.send(:include, Nginx::ResourceHelper)
+::Chef::Recipe.send(:include, Nginx::Helper)
+::Chef::Resource.send(:include, Nginx::Helper)
+
+ohai_plugin 'nginx_module'
 
 apt_update
 
-bulk_install(node['nginx']['build_packages']) unless nginx_installed?
+if not_correctly_installed?
+  remove_nginx
+  bulk_install(node['nginx']['build_packages']['ubuntu'])
+end
 
 %w(pcre zlib openssl).each do |pkg|
   source_package pkg do
     source_url node[pkg]['source_url']
     source_dir node[pkg]['source_dir']
-    config_opts './config' if pkg == 'openssl'
+    config_opts node[pkg]['config_opts']
 
-    only_if node[pkg]['enabled'].to_s
-    not_if nginx_installed?
-  end
-end
-
-node['nginx']['dirs'].each do |nginx_dir|
-  directory nginx_dir do
-    recursive true
+    only_if { node[pkg]['enabled'] }
+    not_if { correctly_installed? }
   end
 end
 
@@ -36,19 +35,35 @@ source_package 'nginx' do
 
   config_opts nginx_generate_config
 
-  not_if nginx_installed?
+  not_if { correctly_installed? }
+end
 
-  %w(pcre zlib openssl nginx).each do |pkg|
-    notifies :cleanup, "source_package[#{pkg}]"
+group node['nginx']['group']
+
+user node['nginx']['user'] do
+  group node['nginx']['group']
+  comment node['nginx']['user_description']
+  shell '/bin/false'
+  manage_home false
+end
+
+nginx_dirs.each do |nginx_dir|
+  directory nginx_dir do
+    recursive true
   end
 end
 
-# Add Nginx service file for systemd
-systemd_service_file 'nginx' do
-  action :add
+template node['nginx']['paths']['conf'] do
+  source 'nginx.conf.erb'
+  user node['nginx']['user']
+  group node['nginx']['group']
+  mode '0640'
+
+  notifies :restart, 'service[nginx]'
 end
 
-# Ensure Nginx service is started and enabled
+systemd_service_template '/lib/systemd/system/nginx.service'
+
 service 'nginx' do
   action [:start, :enable]
 end

@@ -4,9 +4,9 @@ After=syslog.target network.target remote-fs.target nss-lookup.target
 
 [Service]
 Type=forking
-PIDFile=<%= node['nginx']['pid'] %>
-ExecStartPre=<%= node['nginx']['binary'] %> -t
-ExecStart=<%= node['nginx']['binary'] %>
+PIDFile=<%= node['nginx']['paths']['pid'] %>
+ExecStartPre=<%= node['nginx']['paths']['binary'] %> -t
+ExecStart=<%= node['nginx']['paths']['binary'] %>
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s QUIT $MAINPID
 PrivateTmp=true

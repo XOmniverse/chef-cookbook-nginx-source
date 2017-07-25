@@ -4,10 +4,11 @@ maintainer_email 'shawn.huckabay@gmail.com'
 license 'All Rights Reserved'
 description 'Installs Nginx from Source'
 long_description 'Installs Nginx from Source'
-version '0.2.0'
+version '0.3.0'
 chef_version '>= 12.1' if respond_to?(:chef_version)
 supports 'ubuntu', '16.04'
 depends 'apt'
+depends 'ohai'
 
 # The `issues_url` points to the location where issues for this cookbook are
 # tracked.  A `View Issues` link will be displayed on this cookbook's page when

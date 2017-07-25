@@ -8,12 +8,12 @@ property :git_branch, default: 'master'
 action :install do
   package 'build-essential'
 
-  directory new_resource.source_dir do
-    recursive true
+  execute 'pre_clean_up' do
+    command "rm -rf #{new_resource.source_dir}"
   end
 
-  execute 'pre_clean_up' do
-    command "rm -rf #{new_resource.source_dir}/*"
+  directory new_resource.source_dir do
+    recursive true
   end
 
   if new_resource.git_source
