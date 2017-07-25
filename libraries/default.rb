@@ -1,58 +1,43 @@
 module Nginx
   # Helper modules for installing Nginx
   module Helper
-    def installed?(pkg)
-      installed = false
-
-      case pkg
-      when 'nginx'
-        installed = true unless node['nginx_state']['version'] == 'None'
-      when 'pcre'
-        installed = node['nginx_state']['compile_options'].include?(
-          "--with-pcre=#{node['pcre']['source_dir']}"
-        )
-      when 'zlib'
-        installed = node['nginx_state']['compile_options'].include?(
-          "--with-zlib=#{node['zlib']['source_dir']}"
-        )
-      when 'openssl'
-        installed = node['nginx_state']['compile_options'].include?(
-          "--with-openssl=#{node['openssl']['source_dir']}"
-        )
-      end
-
-      installed
+    def nginx_binary_exist?
+      ::File.exist?(node['nginx']['paths']['binary'])
     end
 
-    def not_installed?(pkg)
-      !installed?(pkg)
+    def nginx_binary_not_exist?
+      !nginx_binary_exist?
     end
 
-    def modules_changed?
-      changed = false
-
-      changed = true if installed?('pcre') != node['pcre']['enabled']
-      changed = true if installed?('zlib') != node['zlib']['enabled']
-      changed = true if installed?('openssl') != node['openssl']['enabled']
-
-      changed
+    def nginx_binary_working?
+      node['nginx_state']['version'] != 'None'
     end
 
-    def modules_not_changed?
-      !modules_changed?
+    def nginx_binary_not_working?
+      !nginx_binary_working?
     end
 
-    def correctly_installed?
-      correctly = true
+    def config_changed?
+      expected_config = nginx_generate_config.split(' ')
+      expected_config.shift
 
-      correctly = false if modules_changed?
-      correctly = false if not_installed?('nginx')
-
-      correctly
+      expected_config != node['nginx_state']['compile_options']
     end
 
-    def not_correctly_installed?
-      !correctly_installed?
+    def config_not_changed?
+      !config_changed?
+    end
+
+    def nginx_correctly_installed?
+      return false if nginx_binary_not_exist?
+      return false if nginx_binary_not_working?
+      return false if config_changed?
+
+      true
+    end
+
+    def nginx_not_correctly_installed?
+      !nginx_correctly_installed?
     end
 
     def remove_nginx

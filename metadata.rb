@@ -4,7 +4,7 @@ maintainer_email 'shawn.huckabay@gmail.com'
 license 'All Rights Reserved'
 description 'Installs Nginx from Source'
 long_description 'Installs Nginx from Source'
-version '0.3.0'
+version '0.3.1'
 chef_version '>= 12.1' if respond_to?(:chef_version)
 supports 'ubuntu', '16.04'
 depends 'apt'

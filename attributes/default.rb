@@ -1,5 +1,5 @@
 default['pcre']['enabled'] = true
-default['pcre']['version'] = '8.41'
+default['pcre']['version'] = '8.40'
 default['pcre']['config_opts'] = './configure'
 default['pcre']['source_dir'] = "/src/pcre-#{default['pcre']['version']}"
 default['pcre']['source_url'] =

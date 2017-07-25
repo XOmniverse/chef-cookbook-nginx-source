@@ -10,7 +10,7 @@ ohai_plugin 'nginx_module'
 
 apt_update
 
-if not_correctly_installed?
+if nginx_not_correctly_installed?
   remove_nginx
   bulk_install(node['nginx']['build_packages']['ubuntu'])
 end
@@ -22,7 +22,7 @@ end
     config_opts node[pkg]['config_opts']
 
     only_if { node[pkg]['enabled'] }
-    not_if { correctly_installed? }
+    not_if { nginx_correctly_installed? }
   end
 end
 
@@ -35,7 +35,7 @@ source_package 'nginx' do
 
   config_opts nginx_generate_config
 
-  not_if { correctly_installed? }
+  not_if { nginx_correctly_installed? }
 end
 
 group node['nginx']['group']
