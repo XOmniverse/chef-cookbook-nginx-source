@@ -1,3 +1,13 @@
+plugin_directory = '/tmp/kitchen/ohai/plugins'
+
+describe command("ohai -d #{plugin_directory} nginx_state/version") do
+  its(:stdout) { should match(/1./) }
+end
+
+describe command("ohai -d #{plugin_directory} nginx_state/compile_options") do
+  its(:stdout) { should match(/--sbin-path=/) }
+end
+
 file_list = %w( /usr/sbin/nginx
                 /etc/nginx/pid/nginx.pid )
 
