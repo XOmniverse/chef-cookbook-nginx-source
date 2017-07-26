@@ -18,9 +18,7 @@ module Nginx
     end
 
     def config_changed?
-      expected_config = nginx_generate_config.split(' ')
-      expected_config.shift
-
+      expected_config = nginx_generate_config(false).split(' ')
       expected_config != node['nginx_state']['compile_options']
     end
 
@@ -46,9 +44,12 @@ module Nginx
         ignore_failure true
       end
 
+      package 'nginx' do
+        action :purge
+      end
+
       execute 'delete_nginx_binary' do
         command "rm -f #{node['nginx']['paths']['binary']}"
-        ignore_failure true
       end
     end
 
@@ -77,11 +78,15 @@ module Nginx
       end
     end
 
-    def nginx_generate_config
-      config_opts = if node['nginx']['git_source']
-                      './auto/configure '
+    def nginx_generate_config(full_cmd=true)
+      config_opts = if full_cmd
+                      if node['nginx']['git_source']
+                        './auto/configure '
+                      else
+                        './configure '
+                      end
                     else
-                      './configure '
+                      ''
                     end
 
       config_opts += "--sbin-path=#{node['nginx']['paths']['binary']} "\
